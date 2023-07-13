@@ -64,10 +64,10 @@ orientation = portrait
 # author = © Copyright Info
 
 # change the major version of python used by the app
-osx.python_version = 3
+osx.python_version = 3.8
 
 # Kivy version to use
-osx.kivy_version = 1.9.1
+osx.kivy_version = 2.2.1
 
 #
 # Android specific
@@ -321,7 +321,7 @@ android.allow_backup = True
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-#p4a.branch = master
+#p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
