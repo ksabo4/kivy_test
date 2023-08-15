@@ -558,7 +558,8 @@ class CloudScreen(Screen):
                 exists = True
                 DemoApp.bandages.remove(bandage)
         if exists:"""
-        DemoApp.bandages.append(connect_to.address)
+        #DemoApp.bandages.append(connect_to.address)
+        DemoApp.bandages[connect_to.address] = -1
         bandage_ref = db.reference(f"users/{DemoApp.uid}/bandages/{connect_to.address}")
 
         uuid_battery_service = '0000180f-0000-1000-8000-00805f9b34fb'
@@ -581,6 +582,7 @@ class CloudScreen(Screen):
                                      "pH": bluetooth_value,
                                      "uic acid": "1"})
                     print(bluetooth_value)
+                    DemoApp.bandages[connect_to.address] = bluetooth_value
                     DemoApp.set_bandage_buttons(self)
                     #print(int.from_bytes(battery_level, byteorder='little'))
                     #print(battery_level.decode())
@@ -662,7 +664,11 @@ def load_bandage_info(bandage, screen, btn):
     if rows != "None":
         rows = json.loads(str(bandage_ref.get()).replace('\'', '"'))
 
-        screen.ids.pH.text = "pH Level: " + str(rows[bandage]['pH'])
+        if float(DemoApp.bandages[bandage]) < 0:
+            screen.ids.pH.text = "pH Level: " + str(rows[bandage]['pH'])
+        else:
+            screen.ids.pH.text = "pH Level: " + str(DemoApp.bandages[bandage])
+
         screen.ids.location.text = "Bandage Location: " + str(rows[bandage]['name'])
         if float(rows[bandage]['pH']) < 7:
             screen.ids.woundstatus.text = "Your wound is healing!"
@@ -703,7 +709,7 @@ class DemoApp(MDApp):
         r"json_file.json")
     firebase_admin.initialize_app(cred, {'databaseURL': "https://healm-2-login-default-rtdb.firebaseio.com/"})
     ref = db.reference("/")
-    bandages = []
+    bandages = {}
     cur_bandage = None
     screen_manager = None
 
@@ -726,25 +732,31 @@ class DemoApp(MDApp):
         print("hi")
         for bandage in DemoApp.bandages:
             print(bandage)
-            async with bleak.BleakClient(bandage) as client:
-                """svcs = await client.get_services()
-                for service in svcs:
-                    print(service)
-                    for characteristic in svcs.characteristics.items():
-                        print(characteristic[1].uuid)
-                        print(characteristic[1].description)
-                        print(characteristic[1].properties)
-                    print("")"""
-                bluetooth_value = str(await client.read_gatt_char(uuid_uart_service), "utf-8")
-                print(bluetooth_value)
-                if DemoApp.cur_bandage == bandage:
-                    #DemoApp.screen_manager.get_screen("mainbandage").ids.pH.text = bluetooth_value
-                    Clock.schedule_once(lambda dt: self.update_pH(bluetooth_value), 0)
-        #await asyncio.sleep(5)
+            try:
+                async with bleak.BleakClient(bandage) as client:
+                    """svcs = await client.get_services()
+                    for service in svcs:
+                        print(service)
+                        for characteristic in svcs.characteristics.items():
+                            print(characteristic[1].uuid)
+                            print(characteristic[1].description)
+                            print(characteristic[1].properties)
+                        print("")"""
+                    bluetooth_value = str(await client.read_gatt_char(uuid_uart_service), "utf-8")
+                    print(bluetooth_value)
+                    DemoApp.bandages[bandage] = bluetooth_value
+                    if DemoApp.cur_bandage == bandage:
+                        #DemoApp.screen_manager.get_screen("mainbandage").ids.pH.text = bluetooth_value
+                        Clock.schedule_once(lambda dt: self.update_pH(bluetooth_value), 0)
+            except Exception as e:
+                print(f"Exception: {e}")
 
     async def read_data_loop(self):
         while True:
-            await self.connect()
+            try:
+                await self.connect()
+            except Exception as e:
+                print(f"Exception: {e}")
             await asyncio.sleep(10)
 
     def read_data_loop_sync(self, dt):
@@ -1032,7 +1044,8 @@ class DemoApp(MDApp):
             i = 1
             for bandage in rows:
                 print(bandage)
-                DemoApp.bandages.append(bandage)
+                #DemoApp.bandages.append(bandage)
+                DemoApp.bandages[bandage] = -1
                 button = MDRoundFlatIconButton(text=str(i), icon='bandage', size_hint=(1, 4), id=bandage,
                                                on_press=partial(load_bandage_info, bandage,
                                                                 DemoApp.screen_manager.get_screen('mainbandage')))
