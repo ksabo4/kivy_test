@@ -308,7 +308,8 @@ ScreenManager:
     BoxLayout:
         orientation: 'vertical'
         id: graph_container
-        size_hint_y: 2
+        size_hint_y: .3
+        #padding: 1.5
         # height: "20"
     MDLabel:
         id: woundstatus
@@ -641,13 +642,14 @@ class MainBandageScreen(Screen):
         #plt.plot_date(x,y,xdate=True)
         ax.plot(x, y)
 
-        plot_widget = FigureCanvasKivyAgg(fig)
+        plot_widget = FigureCanvasKivyAgg(fig, size_hint_y=0.8)
 
         screen.ids.graph_container.clear_widgets()
         screen.ids.graph_container.add_widget(plot_widget)
         graph_container = screen.ids.graph_container
-        graph_container.size_hint_y = None  # Disable height size_hint
-        graph_container.height = "150dp"  # Set a fixed height (you can adjust the value as needed)
+        #graph_container.size_hint_y = None  # Disable height size_hint
+
+        #graph_container.height = "150dp"  # Set a fixed height (you can adjust the value as needed)
         graph_container.pos_hint = {"center_x": 0.5, "center_y": 0.5}  # Center the container
 
 
